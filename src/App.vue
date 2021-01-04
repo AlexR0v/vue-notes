@@ -6,77 +6,46 @@
     >
       <v-col align='center'>
         <h1>{{ title }}</h1>
-        <v-col sm='5'>
-          <v-row
-              align='center'
-              class='mb-4'
-          >
-            <v-text-field
-                class='ma-4'
-                label='Title'
-                v-model='newNoteTitle'
-            ></v-text-field>
-            <v-text-field
-                label='Description'
-                v-model='newNoteDescription'
-            ></v-text-field>
-          </v-row>
-          <v-alert
-              max-width='350px'
-              type='error'
-              v-if='error'
-          >
-            Title or description can`t be blank!
-          </v-alert>
-          <v-btn
-              color='info'
-              @click='addNewNote'
-          >New note
-          </v-btn>
-        </v-col>
+        <Inputs
+            :notes='notes'
+        />
         <v-col
             sm='5'
             align='start'
             justify='center'
         >
-          <div style='max-width: 250px'>
-            <v-text-field
-                label='Search note'
-                filled
-                prepend-inner-icon='mdi-magnify'
-                rounded
-                dense
-            ></v-text-field>
-          </div>
-        </v-col>
-        <v-row
-            justify='center'
-            class='ma-4'
-        >
-          <h2 v-if='notes.length === 0'>Add Notes</h2>
-          <v-card
-              width='350px'
+          <v-row
               class='ma-4'
-              elevation='2'
-              v-for='(note, index) in notes'
-              :key='index'
+              justify='space-between'
           >
-            <v-row justify='end'>
-              <v-icon @click='deleteNote(index)'>
-                mdi-close
+            <Search
+                :value='search'
+                @search='search = $event'
+            />
+            <div
+                class='icon_wrapper'
+            >
+              <v-icon
+                  class='list_icon'
+                  style='cursor: pointer'
+                  @click='block = "list"'
+              >
+                mdi-format-list-bulleted
               </v-icon>
-            </v-row>
-            <v-card-title>
-              {{ note.title }}
-            </v-card-title>
-            <v-card-text>
-              {{ note.description }}
-              <v-row>
-                <p class='ma-4'>{{ note.date }}</p>
-              </v-row>
-            </v-card-text>
-          </v-card>
-        </v-row>
+              <v-icon
+                  class='list_icon'
+                  style='cursor: pointer'
+                  @click='block = "block"'
+              >
+                mdi-view-grid-outline
+              </v-icon>
+            </div>
+          </v-row>
+        </v-col>
+        <CardNote
+            :block='block'
+            :notes='notesFilter'
+        />
       </v-col>
     </v-container>
   </v-app>
@@ -84,43 +53,41 @@
 
 <script lang='ts'>
 import Vue from 'vue'
+import Inputs from '@/components/Inputs.vue'
+import CardNote from '@/components/CardNote.vue'
+import Search from '@/components/Search.vue'
 
 export default Vue.extend({
   name: 'App',
-  components: {},
+  components: {
+    Inputs,
+    CardNote,
+    Search
+  },
   data() {
     return {
       title: 'Notes App',
-      newNoteTitle: '',
-      newNoteDescription: '',
-      error: false,
-      notes: [
+      block: 'block',
+      search: '',
+      notes: <Array<object>>[
         {title: 'First Note', description: 'Description for first note', date: new Date().toLocaleString()},
         {title: 'Second Note', description: 'Description for second note', date: new Date().toLocaleString()},
         {title: 'Third Note', description: 'Description for first note', date: new Date().toLocaleString()}
       ]
     }
   },
-  methods: {
-    addNewNote() {
-      if (this.newNoteTitle && this.newNoteDescription) {
-        const newNote = {
-          title: this.newNoteTitle,
-          description: this.newNoteDescription,
-          date: new Date().toLocaleString()
+  computed: {
+    notesFilter() {
+      let arr: any = this.notes
+      let search = this.search
+      if (!search) return arr
+      search = search.trim().toLowerCase()
+      arr = arr.filter((item: any) => {
+        if (item.title.toLowerCase().indexOf(search) !== -1) {
+          return item
         }
-        this.notes.unshift(newNote)
-        this.newNoteTitle = ''
-        this.newNoteDescription = ''
-      } else {
-        this.error = true
-        setTimeout(() => {
-          this.error = false
-        }, 2000)
-      }
-    },
-    deleteNote(index) {
-      this.notes.splice(index, 1)
+      })
+      return arr
     }
   }
 })
@@ -142,5 +109,12 @@ body {
 
 .row .justify-end i {
   cursor: pointer;
+}
+
+.icon_wrapper {
+  display: flex;
+  width: 70px;
+  justify-content: space-between;
+  align-items: center;
 }
 </style>
